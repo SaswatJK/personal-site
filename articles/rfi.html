@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reflections from an interview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #fff;
+        }
+
+        header {
+            background: #fff;
+            border-bottom: 2px solid #000;
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav {
+            max-width: 750px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            color: #000;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.2s;
+        }
+
+        .back-link:hover {
+            opacity: 0.6;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: #000;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.2s;
+        }
+
+        .nav-links a:hover {
+            opacity: 0.6;
+        }
+
+        .container {
+            max-width: 750px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .article-header {
+            margin-bottom: 3rem;
+        }
+
+        .article-meta {
+            color: #666;
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .article-tags {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            background: #000;
+            color: #fff;
+            padding: 0.3rem 0.7rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .article-content {
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+
+        .article-content h2 {
+            font-size: 1.8rem;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #000;
+        }
+
+        .article-content h3 {
+            font-size: 1.4rem;
+            margin-top: 2rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .article-content p {
+            margin-bottom: 1.5rem;
+        }
+
+        .article-content ul,
+        .article-content ol {
+            margin-bottom: 1.5rem;
+            padding-left: 2rem;
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .article-content code {
+            background: #f5f5f5;
+            padding: 0.2rem 0.4rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+        }
+
+        .article-content pre {
+            background: #f5f5f5;
+            padding: 1.5rem;
+            overflow-x: auto;
+            margin-bottom: 1.5rem;
+            border-left: 3px solid #000;
+        }
+
+        .article-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .article-content blockquote {
+            margin: 1.5rem 0;
+            color: #555;
+            font-style: italic;
+        }
+
+        .article-content img {
+            max-width: 100%;
+            height: auto;
+            margin: 2rem 0;
+        }
+
+        .article-footer {
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 2px solid #000;
+        }
+
+        .article-footer p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        footer {
+            border-top: 2px solid #000;
+            padding: 2rem;
+            text-align: center;
+            color: #666;
+            margin-top: 4rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="../index.html" class="back-link">← Back to Home</a>
+            <div class="nav-links">
+                <a href="../index.html#about">About</a>
+                <a href="../index.html#articles">Articles</a>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <article>
+            <div class="article-header">
+                <div class="article-meta">December 2025 · 5 min read</div>
+                <h1>Reflections from an interview</h1>
+                <div class="article-tags">
+                    <span class="tag">Computer Science</span>
+                    <span class="tag">Culture</span>
+                </div>
+            </div>
+
+            <div class="article-content">
+                <p>
+                A month ago, I had a very weird interview for a company, I do not assume they intended for it to be that. I’d been waiting for any position for C/C++ in Nepal, there’s rarely ever any. I passed the technical interview, and the next stage was the other interview. Even though I passed the TECHNICAL interview, and the interview which I am recalling in this article was the in-person panel interview, the final conclusion that one of the interviewers came up with, was that my technical skill did not match my soft skills and that I should try applying for more people-oriented job.
+                </p>
+                <p>
+                With hindsight that I failed the interview that was person-oriented and that I passed the technical test, the whole thesis thrust upon me seems to be upside down.
+                </p>
+                <p>
+                Each part of the article is my thoughts on certain assertions that were made, which should’ve clearly been questions instead.
+                </p>
+                <h2>“You don’t seem to like programming as a hobby”</h2>
+                <p>
+                I only started actually programming 2 years ago, despite having started my undergrad CS degree 4+ years ago (COVID latency). I started doing OpenGL and graphics. It’s a tired story, been said many times. “Graphics rekindled my love for programming” yada yada yada.
+                </p>
+                <p>
+                I don’t want to write about the intricate details of the interview, frankly it doesn’t matter, and nor do I want to write a whole socio-political analysis on the bleak state of the hiring process in Computer Science. Going back to the statement I was uttered to in that interview. What does the interviewer mean when he says I <i>don’t seem</i> to like programming as a hobby? All my youtube downloads are talks and podcasts about Graphics, HPP, Low level Programming, and Language Theory. Is it not enough to consume content about a certain thing for it to be considered a full fledged hobby?
+                </p>
+                <p>
+                I had about 350 commits on Github (mostly to private repos of abandoned projects that are not worth embarrassing myself by making public, the projects). But, my CV only had 2 projects from this year, (the only 2 I finished), the rest were from before. I realised a problem, whilst I loved watching conference talks, reading blogs, and even dabbling in random chapters of over a 100 books that I’ve downloaded, I don’t finish most of the projects.
+                </p>
+                <p>
+                I would open my terminal and write code frequently, but I wasn’t really finishing anything. I would get a surge of motivation and a steadfast idea which I’d divide into multiple stages. I’d always manage to finish the first stage (the easy-intermediate one), and then I’d be left wondering what to do after. The latter stages required more precise plans, grander motivation, and a heck of a lot more knowledge, knowledge which, paradoxically I’d only acquire after I start programming in that complexity, and obviously, to start, I’d need more precise plans, grander motivation…
+                </p>
+                <p>
+                I have recently been trying to find open source projects from which I can learn to structure codes and even contribute, but I know that’s not the correct way of doing things. I am supposed to randomly stumble upon a project that so piques my interest, I delve into its guts and battle with the gut-bugs (keeping in with the metaphor) through my pull request (couldn’t find a good pun). I want it to be a natural progression, as has been everything in my life where I find peace and commitment, my devotion to it MUST be natural.
+                </p>
+                <h2>“You didn’t participate in hackathons”</h2>
+                <p>
+                I really wanted to go on a tangent during that interview about why <i>most</i> Hackathons suck and why it should be replaced from the ground up. I didn’t do that, instead I said, yeah I didn’t do it cause I was disinterested or busy with other things, that seems like a cop out answer because it is.
+                </p>
+                <p>
+                Imagine this if you will, aeronautical or mechanical engineers do an engineering fest where engineers come to a venue, they’re told “build anything” and they build some marketing gimmick like a car engine that pours Matcha tea, or a jet engine that has senses pets. That would be seen as a cruel joke to the engineers. However, that is the essence of most Hackathons. Over half the time in hackathons, each group just tries to market their gimmick superfluously, spending more time in Powerpoint or Canva than in their IDE. It’s all about “building products” rather than solving any scientific challenge. It’s called “Computer Science” for god's sake! What a joke of a field.
+                </p>
+                <p>
+                This doesn’t have to be the case however, in areas with deep CS history that stems from before the “tech wave” let’s call it. They host real competitions where the young prospective programmers learn to solve real problems like “scientists” rather than think like an ad agency.
+                </p>
+                <p>
+                <ul>
+                <li>
+                <p><b>The demoscene</b>:
+                The demoscene originated in the 80s and 90s, programmers would create audio + visual real time demos (yeah it’s related to graphics, sorry). However there was a catch, you would have to craft the audio yourself in the time frame, and you’d have to write code to make this visual demo in a very limited hardware. It has been designated as UNESCO living cultural heritage in many european countries. These countries’ most influential developers all came out from the demoscene, so many scientists who publish in SIGGRAPH, so many people who have made contributions to the field have come out of the demoscene. Even now, the demoscene persists, despite RAM being available like never before (Sadly AI companies have incentivized RAM companies to stop selling to consumers), Graphics cards galore, has very strict computational constraints.
+                </p>
+                <p>
+                The demoscene that I know of right now is the Lovebyte demo, with 1024 byte, 32 byte, and 256 byte categories, where the realtime demo has to be 256 byte!! Imagine the ingenuity and creativity that one realizes while trying to compete in this category, even if you fail, you learn so much.
+                </p>
+                </li>
+                <li>
+                <b>International Collegiate Programming Contest</b>: Bunch of groups try to solve real algorithmic problems, the fastest, most efficient implementation wins.
+                </li>
+                <li>
+                <b>Micromice competitions</b>: The simplest example I can think of, which isn’t as hardcore as the aforementioned ones, are the micromouse competitions where students make ever faster mice with better algorithms, leveraging the most out of the box interesting techniques to race their mice against each other in a maze. The fastest mouse wins.
+                </li>
+                </ul>
+                </p>
+                <p>
+                Which competition actually helps new students learn algorithms, high performance good programming practice, and problem solving? The competition where 70% of the students ask AI to make the best Canva slides for their gimmick idea, or the ones where they race a mouse inside a maze in the most novel way? Which produces the most competent scientists and engineers, the ones that actually make the world work, and not just squeeze money from investment banks.
+                </p>
+                <p>
+                I couldn’t really go on this tangent during the interview, so I just said “I wasn’t interested in hackathons" as the most lousy answer.
+                </p>
+                <h2>Your hobbies, really?</h2>
+                <p>One weird moment was when they read out my CV, where I'd listed my hobby to be cooking and reading. In the reading one, I said I like to read Philosophy, classic literature, and CS books. The interviewer scoffed at that idea.
+                </p>
+                <blockquote>Really? You like reading CS books and classic literature? You don't like scifi or comics?</blockquote>
+                <p>
+                Why can someone not like going through CS books? Literally this month I read some parts of the Multiplayer game programming and learnt about the influential tribes' network's white paper.
+                </p>
+                <p>
+                I also read a bit of crafting interpreters to demystify the thing that I am most scared of: Compilers.
+                </p>
+                <p>
+                I think it's par for the course that a zoomer like myself would dabble in books, not fully committing to any of them, especially since these are thick and dense with theory. I talk to people in programming forums, it's a very real thing to start book(s), read a bit, find themselves to be scared and either underestimate themselves and stop, or divert into a tangent topic, more motivated than ever.
+                </p>
+                <p>
+                I see this as a problem specific to CS. I don't think anyone would not believe a math undergrad student if they say they like reading math textbooks even if they don't fully understand, and that they'd love to learn more and indulge themselves in the pursuit of mathematics. Most people in the field of sciences slowly develop their interest in different sub-fields and are desperate to practice and learn from that sub-field. I doubt that their motivation to further learn a very specific sub-field, as a begineer would be seen as inauthentic.
+                </p>
+                <p>
+                The more I write this, the more I realize, I felt disrespected, the companies don't even pretend to care about the people they're supposed to hire, they expect some exact archetype that you're supposed to mold into. Not once was I asked, why I did certain projects. The one time I was asked was the most cliche question of "What's the hardest problem you faced in projects", and I talked about Atmoshperic Scattering, and they didn't ask me why, what, how I went about it. I just gave a rundown, thinking I would be asked to further clarify, nah, they then asked me </p>
+                <blockquote>are you sure you like programming? you want to do a programming job? You should work on people facing field like marketing or QA.</blockquote>
+                <p>
+                The same thing with that interviewer's weird reaction that I listed classic literautre as a hobby. I love to move my finger along the thread of evolution of any field, be it the fields of arts in paintings, movies, or literautre, to the field of sciences. I struggle understanding new-waves without knowing how it came about. I don't think it's a big deal to read classic literature. It's not hard to read it. But again, they never asked me why I liked reading it, why I put it down, they just asserted that I was supposedly making it up, or playing a character.
+                </p>
+                <h2>Conclusion</h2>
+                <p>
+                I came home from that interview that day and made almost all of my github repo public. After talking to people in the programming community, I decided, next time, I will maybe stand up for myself a little more. The bit about not being able to finish all my projects, I think every programmer goes through this phase, that's what I've heard from others way older than me, as graphics programmers are all in their 40s. I am working on it, and I feel hopeful.
+                </p>
+                </div>
+            <div class="article-footer">
+                <p>Thanks for reading! Feel free to reach out if you want to discuss.</p>
+            </div>
+        </article>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 | Saswat Jung Khadka.</p>
+    </footer>
+</body>
+</html>
