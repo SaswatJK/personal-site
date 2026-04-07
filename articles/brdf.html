@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Microfacet BRDFs from Scratch</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[
+    {left:'$$',right:'$$',display:true},
+    {left:'$',right:'$',display:false}
+  ],throwOnError:false})"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Source+Code+Pro:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --ink:      #1a1814;
+    --paper:    #f7f4ef;
+    --paper2:   #f0ece4;
+    --rule:     #d8d0c4;
+    --accent:   #8b3a2a;
+    --accent2:  #2a5a8b;
+    --muted:    #7a7060;
+    --eq-bg:    #ede9e0;
+    --max-w:    720px;
+    --serif:    'Lora', Georgia, serif;
+    --sans:     'DM Sans', sans-serif;
+    --mono:     'Source Code Pro', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 18px;
+    line-height: 1.8;
+  }
+
+  /* ── Progress bar ── */
+  #progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    width: 0%;
+    background: var(--accent);
+    z-index: 200;
+    transition: width 0.1s linear;
+  }
+
+  /* ── Site header ── */
+  .site-header {
+    background: var(--paper);
+    border-bottom: 2px solid var(--ink);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .site-nav {
+    max-width: var(--max-w);
+    margin: 0 auto;
+    padding: 0.9rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .site-nav .brand {
+    font-family: var(--sans);
+    font-weight: 500;
+    font-size: 1rem;
+    color: var(--ink);
+    text-decoration: none;
+    letter-spacing: -0.01em;
+  }
+  .site-nav .brand:hover { opacity: 0.6; }
+  .nav-links {
+    display: flex;
+    gap: 2rem;
+  }
+  .nav-links a {
+    font-family: var(--sans);
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--ink);
+    text-decoration: none;
+    letter-spacing: 0.02em;
+  }
+  .nav-links a:hover { opacity: 0.6; }
+
+  /* ── Page wrapper ── */
+  .page {
+    max-width: var(--max-w);
+    margin: 0 auto;
+    padding: 3.5rem 2rem 6rem;
+  }
+
+  /* ── Article header ── */
+  .article-header {
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 2rem;
+    margin-bottom: 2.5rem;
+  }
+  .article-meta {
+    font-family: var(--sans);
+    font-size: 0.78rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.9rem;
+  }
+  .article-meta a { color: var(--accent2); text-decoration: none; }
+  .article-header h1 {
+    font-family: var(--serif);
+    font-size: clamp(1.8rem, 5vw, 2.8rem);
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.2rem;
+  }
+  /* Tag chips */
+  .article-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+  .tag {
+    font-family: var(--sans);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    padding: 0.25rem 0.65rem;
+    border: 1.5px solid var(--ink);
+    color: var(--ink);
+    background: transparent;
+    cursor: default;
+    transition: background 0.15s, color 0.15s;
+  }
+  .tag:hover {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  /* ── TOC ── */
+  .toc {
+    background: var(--paper2);
+    border-left: 3px solid var(--accent);
+    padding: 1.4rem 1.6rem;
+    margin: 2.5rem 0;
+    border-radius: 0 4px 4px 0;
+  }
+  .toc-title {
+    font-family: var(--sans);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.8rem;
+  }
+  .toc ol {
+    list-style: decimal;
+    padding-left: 1.4rem;
+    font-family: var(--sans);
+    font-size: 0.88rem;
+    line-height: 2;
+  }
+  .toc a {
+    color: var(--accent2);
+    text-decoration: none;
+    border-bottom: 1px dotted var(--accent2);
+  }
+  .toc a:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* ── Symbols box ── */
+  .symbols-box {
+    background: var(--paper2);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 1.4rem 1.8rem;
+    margin: 2rem 0;
+    font-family: var(--sans);
+    font-size: 0.88rem;
+  }
+  .symbols-box h3 {
+    font-family: var(--sans);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.8rem;
+  }
+  .symbols-grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.3rem 1.2rem;
+  }
+  .sym-key { font-family: var(--mono); color: var(--accent); font-size: 0.85rem; }
+  .sym-val { color: var(--ink); }
+
+  /* ── Sections ── */
+  section { margin-bottom: 3.5rem; }
+
+  h2 {
+    font-family: var(--serif);
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 3rem 0 1rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--rule);
+    scroll-margin-top: 5rem;
+  }
+  h3 {
+    font-family: var(--serif);
+    font-size: 1.15rem;
+    font-weight: 600;
+    font-style: italic;
+    margin: 2rem 0 0.6rem;
+    color: var(--accent);
+    scroll-margin-top: 5rem;
+  }
+
+  p { margin-bottom: 1.1rem; }
+
+  /* ── Equations ── */
+  .eq-block {
+    background: var(--eq-bg);
+    border-left: 3px solid var(--accent2);
+    border-radius: 0 4px 4px 0;
+    padding: 1rem 1.4rem 1rem 1.2rem;
+    margin: 1.6rem 0;
+    overflow-x: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    scroll-margin-top: 5rem;
+  }
+  .eq-block .katex-display { margin: 0; }
+  .eq-num {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  a.eq-ref {
+    font-family: var(--mono);
+    font-size: 0.85em;
+    color: var(--accent2);
+    text-decoration: none;
+    border-bottom: 1px dotted var(--accent2);
+    padding: 0 1px;
+  }
+  a.eq-ref:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* ── Figures ── */
+  figure {
+    margin: 2.5rem 0;
+    text-align: center;
+  }
+  figure iframe {
+    width: 100%;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    background: #0a0a0f;
+    display: block;
+  }
+  figure img {
+    max-width: 100%;
+    border-radius: 4px;
+    border: 1px solid var(--rule);
+  }
+  figcaption {
+    font-family: var(--sans);
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-top: 0.7rem;
+    text-align: left;
+    line-height: 1.5;
+  }
+  figcaption strong { font-weight: 500; color: var(--ink); }
+  .fig-placeholder {
+    background: var(--paper2);
+    border: 1.5px dashed var(--rule);
+    border-radius: 6px;
+    padding: 3rem 1rem;
+    color: var(--muted);
+    font-family: var(--sans);
+    font-size: 0.85rem;
+    font-style: italic;
+  }
+
+  /* ── Callout ── */
+  .callout {
+    background: var(--paper2);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 4px 4px 0;
+    padding: 1rem 1.4rem;
+    margin: 1.5rem 0;
+    font-family: var(--sans);
+    font-size: 0.9rem;
+    color: var(--ink);
+  }
+  .callout strong { color: var(--accent); }
+
+  /* ── References ── */
+  #references { margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--ink); }
+  #references h2 { border-bottom: none; margin-top: 0; padding-bottom: 0; }
+  .ref-list { list-style: none; padding: 0; margin-top: 1.5rem; }
+  .ref-list li {
+    display: grid;
+    grid-template-columns: 2.4rem 1fr;
+    gap: 0.5rem;
+    margin-bottom: 1.4rem;
+    font-family: var(--sans);
+    font-size: 0.88rem;
+    line-height: 1.6;
+    scroll-margin-top: 5rem;
+  }
+  .ref-num {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--accent);
+    padding-top: 0.1rem;
+    font-weight: 600;
+  }
+  .ref-content em { font-style: italic; }
+  .ref-content a {
+    color: var(--accent2);
+    text-decoration: none;
+    word-break: break-all;
+    font-size: 0.82rem;
+  }
+  .ref-content a:hover { text-decoration: underline; }
+  .ref-authors { color: var(--muted); }
+
+  a.cite {
+    font-family: var(--mono);
+    color: var(--accent2);
+    text-decoration: none;
+    vertical-align: super;
+    font-size: 0.72em;
+  }
+  a.cite:hover { text-decoration: underline; }
+
+  /* ── Highlight on jump ── */
+  :target { animation: highlight 1.8s ease; }
+  @keyframes highlight {
+    0%   { background: #ffe8b0; }
+    100% { background: transparent; }
+  }
+
+  hr { border: none; border-top: 1px solid var(--rule); margin: 2.5rem 0; }
+  strong { font-weight: 600; }
+  em { font-style: italic; }
+
+  /* ── Site footer ── */
+  .site-footer {
+    border-top: 2px solid var(--ink);
+    text-align: center;
+    font-family: var(--sans);
+    font-size: 0.95rem;
+    color: var(--muted);
+  }
+  .site-footer a {
+    color: var(--accent2);
+    text-decoration: none;
+  }
+  .site-footer a:hover { text-decoration: underline; }
+
+  @media (max-width: 600px) {
+    .page { padding: 2rem 1.2rem 5rem; }
+    body { font-size: 16px; }
+    .eq-block { flex-direction: column; align-items: flex-start; }
+    .site-nav { padding: 0.8rem 1.2rem; }
+    .nav-links { gap: 1.2rem; }
+  }
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<header class="site-header">
+  <nav class="site-nav">
+    <a href="../index.html" class="brand">← Back to Home</a>
+    <div class="nav-links">
+      <a href="../index.html#about">About</a>
+      <a href="../index.html#articles">Articles</a>
+    </div>
+  </nav>
+</header>
+
+<div class="page">
+
+<header class="article-header">
+  <p class="article-meta">2026 &nbsp;·&nbsp; 25 min read</p>
+  <h1>Microfacet BRDFs from Scratch</h1>
+  <div class="article-tags">
+    <span class="tag">Computer Science</span>
+    <span class="tag">Graphics Programming</span>
+    <span class="tag">Calculus</span>
+    <span class="tag">Geometry</span>
+    <span class="tag">Rendering</span>
+  </div>
+</header>
+
+<section id="intro">
+  <p>
+In this article, I will derive the famous Specular and Diffuse BRDFs from scratch. I will try to make the derivations as intuitive as possible with figures and explanations. The interactive HTML sections have been written by AI (The free version of Claude) as I don't know how to do frontend HTML programming. The other figures were made by me using inkscape.
+  </p>
+  <p>
+This derivation is not novel, I read through 5 very important papers shuffling all of them at once, and I got the idea while going through them, to create a straight-forward article for someone like me, who is interested in mathematics and derivations of equations, but for whom, certain jumps in derivations don't come so naturally.
+  </p>
+
+  <nav class="toc">
+    <div class="toc-title">Contents</div>
+    <ol>
+      <li><a href="#symbols">Important Symbols</a></li>
+      <li><a href="#brdf">The BRDF</a></li>
+      <li><a href="#microgeometry">Microgeometry and Microfacets</a></li>
+      <li><a href="#visible">Visible Microfacets</a></li>
+      <li><a href="#statistical">Statistical BRDFs</a></li>
+      <li><a href="#specular">Specular BRDF</a></li>
+      <li><a href="#diffuse">Diffuse BRDF</a></li>
+      <li><a href="#diffuse-micro">Deriving the Diffuse Micro-BRDF</a></li>
+      <li><a href="#conclusion">Conclusion</a></li>
+      <li><a href="#references">References</a></li>
+    </ol>
+  </nav>
+</section>
+
+<section id="symbols">
+  <h2>Important Symbols</h2>
+  <div class="symbols-box">
+    <h3>Notation reference</h3>
+    <div class="symbols-grid">
+      <span class="sym-key">$L_o$</span>       <span class="sym-val">Outgoing radiance</span>
+      <span class="sym-key">$E_i$</span>       <span class="sym-val">Irradiance</span>
+      <span class="sym-key">$L_i$</span>       <span class="sym-val">Incoming radiance</span>
+      <span class="sym-key">$\omega_g$</span>  <span class="sym-val">Macrosurface normal</span>
+      <span class="sym-key">$\omega_o$</span>  <span class="sym-val">Outgoing direction (w.r.t. surface normal)</span>
+      <span class="sym-key">$\omega_i$</span>  <span class="sym-val">Incoming direction (w.r.t. surface normal)</span>
+      <span class="sym-key">$\theta_i$</span>  <span class="sym-val">Elevation angle - angle w.r.t. the polar axis of the sphere</span>
+      <span class="sym-key">$\phi_i$</span>    <span class="sym-val">Azimuth angle - angle w.r.t. the equatorial plane of the sphere</span>
+      <span class="sym-key">$\omega_h$</span>  <span class="sym-val">Half-vector: $\widehat{\omega_o + \omega_i}$</span>
+      <span class="sym-key">$d\omega$</span>   <span class="sym-val">Differential solid angle</span>
+      <span class="sym-key">$D(\omega_m)$</span><span class="sym-val">Normal Distribution Function (NDF)</span>
+      <span class="sym-key">$G_1$</span>       <span class="sym-val">Masking-shadowing function</span>
+      <span class="sym-key">$F$</span>          <span class="sym-val">Fresnel factor</span>
+    </div>
+  </div>
+</section>
+
+<section id="brdf">
+  <h2>The BRDF</h2>
+
+<p>
+When a light hits any "thing", it will either be transmitted (refracted), reflected, or absorbed. Absorption happens when the atom that is hit by the light takes the energy of the light and it reaches an excited state. Eventually, the energy is spit out, if it's emitted as visible light then that phenomenon is known as Photoluminescence. This isn't really important to Rendering as we rarely have to simulate that phenomena on production or real-time renderers. BRDF deals with the reflection of light. If we want to emulate the transmission as well, it'll require another function with a very similar name, the BTDF.
+</p>
+<p>
+Bi-directional Reflectance Distribution Function (BRDF) is a scary name, but it is quite simple. It gets a bad reputation because when people try to learn it, they get met with very scary looking equations (some of which we will derive in this article).
+</p>
+<p>
+The BRDF is simply the ratio of outgoing radiance in a given direction to the differential irradiance from a specific incoming direction. Radiance is the power of light in a point in a single direction. Irradiance is the power of light in a point from all directions. That is why we use differential irradiance. If we take an integral of the differential irradiance, we get the whole irradiance.
+</p>
+<p>
+So, BRDF $= L_o / E_i$ then? Yes! But, we don't actually know the $E_i$ in rendering. We will have to figure out the Irradiance by taking the incoming light from each angle around the point and integrating it. Taking the irradiance of each angle is not practical at all, there's infinite angles as there are infinite numbers. So we use something called a differential solid angle, which is an infinitesmally small surface 'patch' in a sphere. As that patch is extremely small, the irradiance along the surface at any point will be virtually the same, so we can measure the irradiance at one point in the surface and then project that patch to the point.
+</p>
+<p>
+The surface area of the patch, despite being extremely small, is larger than that of a singular 'point' of whose BRDF we are measuring. Depending on the angle at which the patch is located with respect to the normal, the incoming light gets spread out and misses the point.
+</p>
+
+  <figure id="fig1">
+    <iframe src="../static/cosine-visualizer.html" height="500" scrolling="no"
+            title="Interactive: dω → dA cosine foreshortening"></iframe>
+    <figcaption>
+      <strong>Figure 1.</strong>
+        Interactive visualiser showing how the same solid angle $d\omega$ projects onto a larger surface element $dA$ as the incident angle $\theta$ increases. Drag the ray or use the slider.
+    </figcaption>
+  </figure>
+
+  <p>
+Due to this, the incoming light at a point through a solid angle will then become:
+  </p>
+
+<div class="eq-block" id="eq-dE">
+    <div>$$L_i \cos\theta_i \, d\omega_i$$</div>
+    <span class="eq-num">(irradiance through dω)</span>
+</div>
+
+<p>
+$L_i$ is the incoming light from a direction $i$, $\theta_i$ is the light incident angle wrt normal, and $d\omega$ is the differentiable solid angle.
+</p>  <p>So the BRDF is:</p>
+
+<div class="eq-block" id="eq-brdf-raw">
+    <div>$$\text{BRDF} = \frac{L_o}{L_i \cos\theta_i \, d\omega_i}$$</div>
+    <span class="eq-num"></span>
+</div>
+
+<p>In rendering, we mostly want to figure out the Radiance to a specific directions, so we write it as:</p>
+
+<div class="eq-block" id="eq-i">
+    <div>$$\text{BRDF} = \frac{dL_o}{L_i \cos\theta_i \, d\omega_i}$$</div>
+    <span class="eq-num">(i)</span>
+</div>
+
+  <p>BRDFs have two physical properties:</p>
+  <p>
+    <strong>Conservation of energy</strong> — the total reflected energy cannot exceed the
+    incident energy:
+    $$\int_\Omega f_r \cos\theta_o \, d\omega_o \leq 1$$
+  </p>
+  <p>
+    <strong>Reciprocity</strong> — swapping incoming and outgoing directions leaves
+    the BRDF unchanged:
+    $$f_r(\theta_i, \phi_i, \theta_o, \phi_o) = f_r(\theta_o, \phi_o, \theta_i, \phi_i)$$
+  </p>
+</section>
+
+<section id="microgeometry">
+  <h2>Microgeometry and Microfacets</h2>
+<p>
+A 'smooth' surface to our eye will have extreme difference in elevation as we zoom in. There will be many bumps in the microscopic scale.
+</p>
+  <figure id="fig2">
+    <img src="../static/MicroMacroNormals.svg" height="250" alt="Macrosurface with microsurfaces at microscopic scale.">
+    <figcaption>
+      <strong>Figure 2.</strong>
+        A macrosurface that appears smooth has microsurfaces with varying normals at the microscopic scale.
+    </figcaption>
+  </figure>
+
+<p>
+If we want a realistic simulation of light then we cannot ignore this scale. We are not going to nanogeometry however, we will only think of any surface as being built up of very small microsurfaces. Each point we want to sample on the macrosurface (which may appear as a pixel on our screen) will have microsurfaces. So if we want to figure out the total radiated light in a certain direction for a certain point in the macrosurface, we need to find the radiation for that direction throughout all the points in the microsurface and sum all of it. Since these microsurfaces are very small, the out-radiance angle for each point of the microsurface will be parallel to one-another. This can be visualised as each point projecting itself to a straight line.
+</p>
+
+<figure id="fig3">
+    <img src="../static/MacroSurfaceProjection.svg" height = "250" length = "250"alt="Visible microsurface projection.">
+    <figcaption>
+        <strong>Figure 3.</strong>
+        The microsurface points all project onto a line of width $\cos\theta_{\omega_o}$ in the outgoing direction $\omega_o$.
+    </figcaption>
+</figure>
+
+<p>The area of the projection will be:</p>
+
+<div class="eq-block" id="eq-ii">
+    <div>$$\text{ProjArea} = 1 \cdot \cos(\theta_{\omega_o})$$</div>
+    <span class="eq-num">(ii)</span>
+</div>
+
+<p>
+The points in the microsurface will have different normals so each point's out-radiance will be spread out in the outgoing direction. If the normal of a point in the microsurface is parallel to the outgoing direction, the out-radiance will be projected 1:1 to the projected 'line', while for any other angle the out-radiance will be spread out.
+</p>
+<p>
+Let $\mathcal{M}$ be the Micro-geometry.
+</p>
+
+<div class="eq-block" id="eq-iii">
+    <div>$$L(\omega_o, \mathcal{M}) = \frac{\displaystyle\int_\mathcal{M} \text{projArea}(p_m)\, L(\omega_o, p_m)\, dp_m}{\displaystyle\int_\mathcal{M} \text{projArea}(p_m)\, dp_m}$$</div>
+    <span class="eq-num">(iii)</span>
+</div>
+
+<p>
+This formula acts as a weighted average of the out-radiance of each point of the microsurface. An intuitive metaphor is to imagine a folding phone, if it's folded 90 degrees and you're looking at it. The folded screen that is directly facing your eyes will contribute more to the brightness than the one that is facing up, and is 90 degrees to your eyes.
+</p>
+
+<figure id="fig4">
+    <img src="../static/MicroSurfaceArea.svg" height = "250" length = "250" alt="Area of microsurfaces.">
+    <figcaption>
+        <strong>Figure 4.</strong>
+        The folding phone analogy: the screen directly facing the viewer contributes more brightness than the one at 90 degrees. Each microsurface point contributes proportionally to its projected area.
+    </figcaption>
+</figure>
+
+<p>
+For a macrosurface with microsurfaces, let us create a function $D(\omega)$ which counts the amount of points in the microsurface with a specific normal $\omega$.
+</p>
+
+<div class="eq-block" id="eq-iv">
+    <div>$$D(\omega) = \int_\mathcal{M} \delta_\omega\!\left(\omega_m(p_m)\right) dp_m$$</div>
+    <span class="eq-num">(iv)</span>
+</div>
+
+<p>
+$\delta_\omega$ is known as a dirac delta, think of it as a function that discards what is not expected. $\delta_\omega$ means that the delta will discard every input which isn't $\omega$. $\omega_m(p_m)$ gives the normal of the microsurface point $p_m$. So, $D(\omega)$ gives the total points in the microsurface with the given normal $\omega$.
+</p>
+<p>
+There's an infinite amount of vectors as normals that a point can have. These normals exist in a unit sphere as well. A unit sphere also has all the normals in 3-D. For each point in the microsurface with a normal $\omega_m$, there's a point in the unit sphere with that normal. For a subset of point in the microsurface $\mathcal{M}' \subseteq \mathcal{M}$, there is a subset of unit sphere $\Omega' \subseteq \Omega$ with the same normals.
+</p>
+
+<div class="eq-block" id="eq-area">
+    <div>$$\int_{\mathcal{M}'} dp_m = \int_{\Omega'} D(\omega_m)\, d\omega_m$$</div>
+    <span class="eq-num">(area)</span>
+</div>
+
+<p>
+Integrating for each point in $\mathcal{M}'$ gives the same 'area' as integrating for each point in a unit sphere with the same normals, because $D(\omega_m)$ gives the weight for each of those normals. Reminder that even in the unit sphere integral, the $D(\omega_m)$ goes through each point in the microsurface and checks the normal of each point. So, for the whole microsurface, or the whole unit circle, it gives the microsurface area.
+</p>
+
+<h2 id="visible">Visible microfacets</h2>
+
+<p>
+Since a surface is made up of microsurfaces (Figure 2), the projections will be that of each point in the microsurfaces. Not all the points in the microsurfaces are actually visible, depending on the viewing angle. The visibility also depends on what's known as a 'microsurface profile'. The same distribution of normals can have different behaviors and have different visibility depending on how the normals are distributed along the microsurfaces.
+</p>
+
+<figure id="fig5">
+    <img src="../static/VisibleMicroNormals.svg" height = "250" length = "250"alt="Visible Microsurfaces.">
+        <figcaption>
+        <strong>Figure 5.</strong>
+        Two microsurfaces with the same normal distribution but different profiles can have different visibility. Some points are occluded depending on the viewing direction $\omega_o$.
+    </figcaption>
+</figure>
+
+<p>
+The projected area of the microsurfaces can be viewed as such:
+</p>
+
+<div class="eq-block" id="eq-projm">
+    <div>$$\text{ProjArea}_\mathcal{M} = \int_\mathcal{M} G(\omega_o, p_m)\, \langle \omega_o \cdot \omega_m(p_m) \rangle \, dp_m$$</div>
+    <span class="eq-num"></span>
+</div>
+
+<p>
+$G$ here is a function that evaluates to 0 if a point $p_m$ is blocked, and 1 if it's not blocked. Clamp function is used to cull out backfacing microgeometries, as it'll clamp negative value to 0, so if there's a point which faces the opposite of $\omega_o$, it'll not contribute to the projected area. We can create another $G$ function that takes $\omega_m$ instead of $p_m$ <a class="cite" href="#ref-heitz">[2]</a>. For that:
+</p>
+
+<div class="eq-block" id="eq-v">
+    <div>$$\text{ProjArea}_\mathcal{M} = \int_\Omega G_1(\omega_o, \omega_m)\, \langle \omega_o \cdot \omega_m \rangle\, D(\omega_m)\, d\omega_m$$</div>
+    <span class="eq-num">(v)</span>
+</div>
+
+<p>
+Here, $D(\omega_m)$ gives weight to the specific $\omega_m$. Meaning, if there's more points with a specific $\omega_m$ which are also visible, their contribution has more weight. Since the projected area is the area of all visible points in the microsurface, for a surface of unit area, we know that its area from <a href="#eq-ii" class="eq-ref">(ii)</a>. From <a href="#eq-ii" class="eq-ref">(ii)</a> and <a href="#eq-v" class="eq-ref">(v)</a> we get:
+</p>
+
+<div class="eq-block" id="eq-vi">
+    <div>$$\cos(\theta_{\omega_o}) = \int_\Omega G_1(\omega_o, \omega_m)\, \langle \omega_o \cdot \omega_m \rangle\, D(\omega_m)\, d\omega_m$$</div>
+    <span class="eq-num">(vi)</span>
+</div>
+
+<p>
+In equation <a href="#eq-iii" class="eq-ref">(iii)</a>, let us replace the denominator with <a href="#eq-ii" class="eq-ref">(ii)</a>.
+We can replace the whole integral in the numerator with another numerator that also takes the area <a href="#eq-v" class="eq-ref">(v)</a>, and for the function $L(\omega_o, p_m)$, which is a function of the point, we can just convert it to a function of $\omega_m$: $L(\omega_o, \omega_m)$. (The reason it's so easy to convert is because the radiance depends on the normal of the point regardless).
+</p>
+
+<div class="eq-block" id="eq-vii">
+    <div>$$L(\omega_o, \mathcal{M}) = \frac{\displaystyle\int_\Omega L(\omega_o, \omega_m)\, G_1(\omega_o, \omega_m)\, D(\omega_m)\, \langle \omega_o \cdot \omega_m \rangle \, d\omega_m}{\cos(\theta_{\omega_o})}$$</div>
+    <span class="eq-num">(vii)</span>
+</div>
+
+<div class="eq-block" id="eq-viii">
+    <div>$$L(\omega_o, \mathcal{M}) = \int_\Omega L(\omega_o, \omega_m)\, D_{\omega_o}(\omega_m)\, d\omega_m$$</div>
+    <span class="eq-num">(viii)</span>
+</div>
+
+<p>Here, $D_{\omega_o}(\omega_m)$ acts as a distribution of the visible normals, it gives value between 0 and 1.</p>
+
+<div class="eq-block" id="eq-ix">
+    <div>$$D_{\omega_o}(\omega_m) = \frac{G_1(\omega_o, \omega_m)\, D(\omega_m)\, \langle \omega_o \cdot \omega_m \rangle}{\cos(\theta_{\omega_o})}$$</div>
+    <span class="eq-num">(ix)</span>
+</div>
+
+
+<h2 id="statistical">Statistical BRDFs</h2>
+
+<p>
+$L(\omega_o, \omega_m)$ is the outgoing radiance at a direction $\omega_m$. Using basic calculus, we can rewrite it as:
+</p>
+
+<div class="eq-block" id="eq-x">
+    <div>$$L(\omega_o, \omega_m) = \int_{\Omega_i} \frac{dL(\omega_o, \omega_m)}{d\omega_i}\, d\omega_i$$</div>
+    <span class="eq-num">(x)</span>
+</div>
+
+<p>
+Basically, we differentiate the function wrt $d\omega_i$ and integrate it along $d\omega_i$.
+From <a href="#eq-i" class="eq-ref">(i)</a>, we can say that the micro BRDF, $\text{BRDF}_m$ (It is a function of $\omega_o$, $\omega_i$, and $\omega_m$) for a specific microsurface is:
+</p>
+
+<div class="eq-block" id="eq-micro-def">
+    <div>$$\text{BRDF}_m = \frac{dL_o}{L(\omega_i)\, \langle \omega_i \cdot \omega_m \rangle\, d\omega_i}$$</div>
+    <span class="eq-num"></span>
+</div>
+
+<p>We can ignore the back faces using the clamp, so:</p>
+
+<div class="eq-block" id="eq-xi">
+    <div>$$\frac{dL_o}{d\omega_i} = \text{BRDF}_m \cdot L(\omega_i) \cdot \langle \omega_i \cdot \omega_m \rangle$$</div>
+    <span class="eq-num">(xi)</span>
+</div>
+
+<p>Substituting <a href="#eq-xi" class="eq-ref">(xi)</a> into <a href="#eq-x" class="eq-ref">(x)</a>:</p>
+
+<div class="eq-block" id="eq-xiii">
+    <div>$$L(\omega_o, \omega_m) = \int_{\Omega_i} L(\omega_i)\, \text{BRDF}_m\, \langle \omega_i \cdot \omega_m \rangle\, d\omega_i$$</div>
+    <span class="eq-num">(xiii)</span>
+</div>
+
+<p>Now, let's differentiate equation <a href="#eq-viii" class="eq-ref">(viii)</a> with respect to the incoming irradiance:</p>
+
+<div class="eq-block" id="eq-xiv">
+    <div>$$dL(\omega_o, \mathcal{M}) = \int_\Omega dL(\omega_o, \omega_m)\, G_1(\omega_o, \omega_m)\, D_{\omega_o}(\omega_m)\, d\omega_m$$</div>
+    <span class="eq-num">(xiv)</span>
+</div>
+
+<p>
+We replace $dL_o$ from <a href="#eq-xi" class="eq-ref">(xi)</a> in <a href="#eq-xiv" class="eq-ref">(xiv)</a>:
+</p>
+
+<div class="eq-block" id="eq-xv">
+    <div>$$dL(\omega_o, \mathcal{M}) = L(\omega_i)\, d\omega_i \int_\Omega \text{BRDF}_m\, \langle \omega_i \cdot \omega_m \rangle\, G_1(\omega_o, \omega_m)\, D_{\omega_o}(\omega_m)\, d\omega_m$$</div>
+    <span class="eq-num">(xv)</span>
+</div>
+
+<p>
+The macro BRDF is given in <a href="#eq-i" class="eq-ref">(i)</a>. We can replace the $dL_o$ with <a href="#eq-xv" class="eq-ref">(xv)</a>, then replace $D_{\omega_o}(\omega_m)$ from <a href="#eq-ix" class="eq-ref">(ix)</a>. $\cos(\theta_{\omega_o})$ and $\cos(\theta_i)$ can be taken out of the integral and written as $|\omega_g \cdot \omega_i|$ and $|\omega_g \cdot \omega_o|$ as they depend on the macro surface normal:
+</p>
+
+<div class="eq-block" id="eq-xvi">
+    <div>$$\text{BRDF} = \frac{1}{|\omega_g \cdot \omega_i|\,|\omega_g \cdot \omega_o|} \int_\Omega \text{BRDF}_m\, \langle \omega_i \cdot \omega_m \rangle\, G_1(\omega_i, \omega_o, \omega_m)\, D(\omega_m)\, \langle \omega_o \cdot \omega_m \rangle\, d\omega_m$$</div>
+    <span class="eq-num">(xvi)</span>
+</div>
+
+<p>
+This statistical model of BRDF covers the light before it bounces from the microsurface. After it bounces, it could get blocked by another microsurface, for that, we use a function known as the shadow-masking function ($G_1$). It will take into account the incident direction of the light as well. This is the general form of a BRDF. If we assume the microfacets to be a perfect mirror then we will get Specular BRDF and if we assume it to be a perfect lambertian surface that diffsue light, then we get the Diffuse BRDF.
+</p>
+
+<h2 id="specular">Specular BRDF</h2>
+
+<p>A simple generic specular BSDF will look like this <a class="cite" href="#ref-ggx">[3]</a>:</p>
+
+<div class="eq-block" id="eq-xvii">
+    <div>$$f_s = \rho \cdot \frac{\delta_{\omega_s}(\omega_o)}{|\omega_o \cdot \omega_m|}$$</div>
+    <span class="eq-num">(xvii)</span>
+</div>
+
+<p>
+$\rho$ is the fraction of out-radiance. $\omega_s$ is the angle of specular reflection. $|\omega_o \cdot \omega_m|$ is there to cancel out the $|\omega_o \cdot \omega_m|$ numerator in the macro surface BSDF integral.
+</p>
+<p>
+If we assume only a specular reflection then for a given $\omega_i$ and $\omega_o$, there is at most only 1 $\omega_m$ that scatters the energy from $\omega_i$ to $\omega_o$ directly. That normal is $\omega_h$ and $\omega_m$ (also known as the half vector): $\omega_h = \omega_i + \omega_o$.
+</p>
+<p>In this case, we can re-write $f_s$ in terms of $\omega_h$:</p>
+
+<div class="eq-block" id="eq-xviii">
+    <div>$$f_s = \rho \cdot \frac{\delta_{\omega_h}(\omega_m)}{|\omega_o \cdot \omega_m|} \cdot \left\|\frac{d\omega_h}{d\omega_o}\right\|$$</div>
+    <span class="eq-num">(xviii)</span>
+</div>
+
+<p>
+The $\delta_{\omega_s}(\omega_o)$ is just a shorthand for writing $\int \delta(\omega_o - \omega_s)\, d\omega_o$. We want the equation <a href="#eq-xvii" class="eq-ref">(xvii)</a> in the form of $\omega_h$ and $\omega_m$ instead. The delta will be changed to $\delta_{\omega_h}(\omega_m)$. The dirac delta always has an associated element <a class="cite" href="#ref-ggx">[3]</a>. The dirac delta in <a href="#eq-xvii" class="eq-ref">(xvii)</a> has $d\omega_o$ associated with itself. When changing it to be associated with $d\omega_h$, we need to find the jacobian so that it scales properly.
+</p>
+<p>
+The jacobian must be $\|d\omega_m/d\omega_o\| = \|d\omega_m/d\omega_h \cdot d\omega_h/d\omega_o\|$. Since the delta function means that only those $\omega_m$ that are $\omega_h$ are considered, we can say that $d\omega_m/d\omega_h = 1$. So, $\|d\omega_m/d\omega_o\| = \|d\omega_h/d\omega_o\|$.
+</p>
+<p>The jacobian can be written as:</p>
+
+<div class="eq-block" id="eq-xix">
+    <div>$$\frac{d\omega_h}{d\omega_o} = \frac{|\omega_o \cdot \omega_h|}{\|\tilde{h}\|^2}$$</div>
+    <span class="eq-num">(xix)</span>
+</div>
+
+<p>
+This gives the ratio of how much a change in solid angle of $d\omega_o$ corresponds to a change in the solid angle of $d\omega_h$. We will see that the size of the solid angle patch $d\omega_h$ depends on the length of the $\tilde{h}$ vector.
+</p>
+
+<figure id="fig6">
+    <iframe src="../static/brdf-visualizer.html" height="640" scrolling="no"
+            title="Interactive: BRDF Jacobian visualiser"></iframe>
+    <figcaption>
+        <strong>Figure 6.</strong>
+        Interactive Jacobian visualiser. Drag the <strong>i</strong> (red) and <strong>o</strong> (green) arrowheads or use the sliders. The green wedge $d\omega_o$ lives on the circle centred at the tip of $\mathbf{i}$; the dark wedge $d\omega_h$ lives on the central unit sphere. The dashed lines show the projection. Notice how $d\omega_h \ll d\omega_o$ when $\mathbf{i}$ and $\mathbf{o}$ are nearly parallel.
+    </figcaption>
+</figure>
+
+<p>We know $\|\tilde{h}\| = \tilde{h} \cdot \hat{h}$. If we do a dot product of a vector with its unit self, we get its length, as $\theta = 0$, only the magnitude will remain. Putting this magnitude value in <a href="#eq-xix" class="eq-ref">(xix)</a>:</p>
+
+<div class="eq-block" id="eq-xx-steps">
+    <div>
+    $$\frac{d\omega_h}{d\omega_o} = \frac{|\omega_o \cdot \omega_h|}{(\tilde{h} \cdot \hat{h})^2}$$
+    $$= \frac{|\omega_o \cdot \omega_h|}{((\omega_o + \omega_i) \cdot \hat{h})^2}$$
+    $$= \frac{|\omega_o \cdot \omega_h|}{(\omega_o \cdot \hat{h} + \omega_i \cdot \hat{h})^2}$$
+    $$= \frac{|\omega_o \cdot \omega_h|}{(2\,\omega_o \cdot \hat{h})^2}$$
+    $$= \frac{1}{4|\omega_o \cdot \omega_h|}$$
+    </div>
+    <span class="eq-num">(xx)</span>
+</div>
+
+<p>
+($\omega_o \cdot \hat{h} = \omega_i \cdot \hat{h}$ because $\hat{h}$ is a bisector of $\omega_o$ and $\omega_i$.)
+</p>
+
+<p>Putting this value in <a href="#eq-xviii" class="eq-ref">(xviii)</a>:</p>
+
+<div class="eq-block" id="eq-xxi">
+    <div>$$f_s = \frac{F \cdot \delta_{\omega_h}(\omega_m)}{4\,|\omega_o \cdot \omega_m|\,|\omega_o \cdot \omega_h|}$$</div>
+    <span class="eq-num">(xxi)</span>
+</div>
+
+<p>
+For reflection, the fraction of out radiance is the Fresnel factor. Since $f_s$ is the micro brdf for specular reflections, We replace $\text{BRDF}_m$ with $f_s$ in <a href="#eq-xvi" class="eq-ref">(xvi)</a>. Due to the delta function, we can discard all the $\omega_m$s that are not $\omega_h$ and we can remove the integral. Cancelling the dot products:
+</p>
+
+<div class="eq-block" id="eq-xxii">
+    <div>$$\boxed{\text{BRDF}_{\text{spec}} = \frac{F(\omega_i, \omega_h)\, G_1(\omega_i, \omega_o, \omega_h)\, D(\omega_h)}{4\,|\omega_g \cdot \omega_i|\,|\omega_g \cdot \omega_o|}}$$</div>
+    <span class="eq-num">(xxii)</span>
+</div>
+
+<p>
+This is the Specular form of the macro BRDF. It can be solved by choosing appropriate $G_1$ and $D$ functions. Most of the engines in real time rendering use the GGX $D$ and $G_1$ functions.
+</p>
+
+
+<h2 id="diffuse">Diffuse BRDFs</h2>
+
+<p>It is well known that the Diffuse micro BRDF $= 1/\pi$. So the diffuse BRDF will just be:</p>
+
+<div class="eq-block" id="eq-xxiii">
+    <div>$$\text{BRDF}_{\text{diff}} = \frac{1}{|\omega_g \cdot \omega_i|\,|\omega_g \cdot \omega_o|} \int_\Omega \frac{1}{\pi}\, \langle \omega_i \cdot \omega_m \rangle\, G_1(\omega_i, \omega_o, \omega_m)\, D(\omega_m)\, \langle \omega_o \cdot \omega_m \rangle\, d\omega_m$$</div>
+    <span class="eq-num">(xxiii)</span>
+</div>
+
+<p>
+This equation is actually not solved by renderers. Either approximations are used or there's sampling done for a number of incoming light direction using monte carlo simulation.
+</p>
+
+<h2 id="diffuse-micro">Diffuse micro BRDF</h2>
+
+<p>
+Remember that a physically accurate BRDF has the property of conservation of energy:
+$$\int_\Omega \text{BRDF} \cos\theta_o \, d\omega_o \leq 1$$
+</p>
+<p>
+$d\omega$ is a surface element of a sphere, also known as a solid angle. $d\omega$ is very small, so it acts as a rectangle. The area of a rectangle is the width $\times$ length. If we are to find the area of $d\omega$, we only need the length and the width of the surface element.
+</p>
+<p>
+We are used to dividing spheres into latitudes and longitudes. The longitudinal lines are great circles (the largest straight lines we can make on a sphere). The longitudinal lines extend from one pole to another. Two longitudinal lines will converge near the pole and separate the farthest at the equator. The horizontal lines are parallel to each other, they don't converge and two parallel lines are equally spaced out all around the circle.
+</p>
+<p>
+$d\theta$ is the difference in angle between the top and bottom sides (the length).
+</p>
+
+<figure id="fig7">
+    <img src="../static/SurfaceElement.svg" height = "250" length = "250"alt="Surface element explanation.">
+        <figcaption>
+        <strong>Figure 7.</strong>
+        The surface element $d\omega$ on a unit sphere. Its height is $d\theta$ and its width scales as $\sin\theta \, d\phi$, shrinking to zero at the poles.
+    </figcaption>
+</figure>
+
+<p>
+The width of the surface element depends on where the surface element is. Depending on where the surface element is, the width may be $d\phi$ near the equator, or it may even reach 0 if the surface element is near the poles. We can scale the size by its elevation, if it's towards the pole (elevation increases), the width tends to 0. With elevation 0, the width becomes $d\phi$. This behavior can be modeled by the sine of the elevation angle. So we can say that the width $= \sin(\theta)\, d\phi$. The area then becomes:
+</p>
+
+<div class="eq-block" id="eq-dw">
+    <div>$$d\omega = \sin\theta \, d\phi \, d\theta$$</div>
+    <span class="eq-num">(dω)</span>
+</div>
+
+<p>In this equation, we replace $d\omega_o$:</p>
+
+$$\int_\Omega \text{BRDF} \cos\theta_o \sin\theta_o \, d\phi_o \, d\theta_o \leq 1$$
+
+<p>
+Since we assume a perfect diffuse behavior, the diffuse reflection reflects the light in all direction equally. Solving the integral:
+</p>
+
+$$\int_0^{2\pi}\!\int_0^{\pi/2} \text{BRDF} \cos\theta_o \sin\theta_o \, d\theta_o \, d\phi_o = 1$$
+
+$$\int_0^{2\pi} \text{BRDF} \left[\frac{\sin^2\theta_o}{2}\right]_0^{\pi/2} d\phi_o = 1$$
+
+$$\int_0^{2\pi} \text{BRDF} \cdot \frac{1}{2}\, d\phi_o = 1$$
+
+$$\text{BRDF} \cdot \frac{1}{2} \cdot 2\pi = 1$$
+
+<div class="eq-block" id="eq-lambertian">
+    <div>$$\boxed{\text{BRDF}_{\text{Lambertian}} = \frac{1}{\pi}}$$</div>
+    <span class="eq-num">(Lambertian)</span>
+</div>
+
+<section id="conclusion">
+  <h2>Conclusion</h2>
+  <p>
+    We have derived these the necessary equation to get started with BRDFs. This article may even serve as a basic refresher for calculus, though I have not done that great of a job at providing intuition. To understand how to actually solve these equations is a different ballpark.
+    </p>
+    <p>
+    This article should serve as a stepping stone to the original papers. Each term in <a href="#eq-xxii" class="eq-ref">(xxii)</a> (The Fresnel factor $F$, the masking-shadowing function $G_1$, and the NDF $D$) has its own rich derivation depending on the model chosen.
+    Diving into those headfirst is bound to hurt your head, so I recommend everyone to look through the references that I have listed for a more in-depth understanding of the topic. This article should help with a smoother reading of those papers.</p>
+</section>
+
+<section id="references">
+  <h2>References</h2>
+  <ol class="ref-list">
+    <li id="ref-wynn">
+      <span class="ref-num">[1]</span>
+      <span class="ref-content">
+        <span class="ref-authors">C. Wynn.</span>
+        <em>An Introduction to BRDF-Based Lighting.</em>
+        NVIDIA Corporation, 2007.<br>
+        <a href="https://www.cs.princeton.edu/courses/archive/fall06/cos526/tmp/wynn.pdf"
+           target="_blank" rel="noopener">cs.princeton.edu/…/wynn.pdf</a>
+      </span>
+    </li>
+    <li id="ref-heitz">
+      <span class="ref-num">[2]</span>
+      <span class="ref-content">
+        <span class="ref-authors">E. Heitz.</span>
+        <em>Understanding the Masking-Shadowing Function in Microfacet-Based BRDFs.</em>
+        Journal of Computer Graphics Techniques, 3(2), 2014.<br>
+        <a href="https://www.jcgt.org/published/0003/02/03/paper.pdf"
+           target="_blank" rel="noopener">jcgt.org/published/0003/02/03/paper.pdf</a>
+      </span>
+    </li>
+    <li id="ref-ggx">
+      <span class="ref-num">[3]</span>
+      <span class="ref-content">
+        <span class="ref-authors">B. Walter, S. R. Marschner, H. Li, K. E. Torrance.</span>
+        <em>Microfacet Models for Refraction through Rough Surfaces.</em>
+        EGSR 2007.<br>
+        <a href="https://www.cs.cornell.edu/~srm/publications/EGSR07-btdf.pdf"
+           target="_blank" rel="noopener">cs.cornell.edu/…/EGSR07-btdf.pdf</a>
+      </span>
+    </li>
+    <li id="ref-cook">
+      <span class="ref-num">[4]</span>
+      <span class="ref-content">
+        <span class="ref-authors">R. L. Cook, K. E. Torrance.</span>
+        <em>A Reflectance Model for Computer Graphics.</em>
+        ACM SIGGRAPH, 1982.<br>
+        <a href="https://dl.acm.org/doi/10.1145/357290.357293"
+           target="_blank" rel="noopener">dl.acm.org/doi/10.1145/357290.357293</a>
+      </span>
+    </li>
+    <li id="ref-blinn">
+      <span class="ref-num">[5]</span>
+      <span class="ref-content">
+        <span class="ref-authors">J. F. Blinn.</span>
+        <em>Models of Light Reflection for Computer Synthesized Pictures.</em>
+        ACM SIGGRAPH, 1977.<br>
+        <a href="https://dl.acm.org/doi/10.1145/965141.563893"
+           target="_blank" rel="noopener">dl.acm.org/doi/10.1145/965141.563893</a>
+      </span>
+    </li>
+  </ol>
+</section>
+
+</div>
+
+<footer class="site-footer">
+<p>&copy; 2026 | Saswat Jung Khadka.</p>
+</footer>
+
+<script>
+  const bar = document.getElementById('progress-bar');
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const scrolled = doc.scrollTop || document.body.scrollTop;
+    const total = doc.scrollHeight - doc.clientHeight;
+    bar.style.width = (total > 0 ? (scrolled / total) * 100 : 0) + '%';
+  }, { passive: true });
+</script>
+
+</body>
+</html>
