@@ -418,7 +418,16 @@
 
 <section id="intro">
   <p>
-In this article, I will derive the famous Specular and Diffuse BRDFs from scratch. I will try to make the derivations as intuitive as possible with figures and explanations. The interactive HTML sections have been written by AI (The free version of Claude) as I don't know how to do frontend HTML programming. The other figures were made by me using inkscape.
+    In this article, I will derive these famous Specular and Diffuse BRDFs from scratch.</p>
+<div class="eq-block">
+    <div>$$\boxed{\text{BRDF}_{\text{spec}} = \frac{F(\omega_i, \omega_h)\, G_1(\omega_i, \omega_o, \omega_h)\, D(\omega_h)}{4\,|\omega_g \cdot \omega_i|\,|\omega_g \cdot \omega_o|}}$$</div>
+    <span class="eq-num"></span>
+</div>
+<div class="eq-block">
+    <div>$$\text{BRDF}_{\text{diff}} = \frac{1}{|\omega_g \cdot \omega_i|\,|\omega_g \cdot \omega_o|} \int_\Omega \frac{1}{\pi}\, \langle \omega_i \cdot \omega_m \rangle\, G_1(\omega_i, \omega_o, \omega_m)\, D(\omega_m)\, \langle \omega_o \cdot \omega_m \rangle\, d\omega_m$$</div>
+    <span class="eq-num"><span>
+</div>
+  <p>I will try to make the derivations as intuitive as possible with figures and explanations. The interactive HTML sections have been written by AI (The free version of Claude) as I don't know how to do frontend HTML programming. The other figures were made by me using inkscape.
   </p>
   <p>
 This derivation is not novel, I read through 5 very important papers shuffling all of them at once, and I got the idea while going through them, to create a straight-forward article for someone like me, who is interested in mathematics and derivations of equations, but for whom, certain jumps in derivations don't come so naturally.
