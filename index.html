@@ -1,10 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Source+Code+Pro:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Saswat Jung Khadka - Aspiring Graphics Engineer</title>
     <style>
+        :root {
+            --ink:      #1a1814;
+            --paper:    #f7f4ef;
+        }
         * {
             margin: 0;
             padding: 0;
@@ -12,7 +18,7 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Lora', Georgia, serif;
             line-height: 1.6;
             color: #333;
             background: #fff;
@@ -223,21 +229,24 @@
             margin-bottom: 0.5rem;
         }
 
-        .article-tags {
+          .article-tags {
             display: flex;
-            gap: 0.5rem;
-            margin: 0.8rem 0;
             flex-wrap: wrap;
-        }
-
-        .tag {
-            background: #000;
-            color: #fff;
-            padding: 0.2rem 0.6rem;
-            font-size: 0.85rem;
+            gap: 0.5rem;
+            margin-top: 1rem;
+          }
+          .tag {
+            font-family: var(--sans);
+            font-size: 0.75rem;
             font-weight: 500;
-        }
-
+            letter-spacing: 0.04em;
+            padding: 0.25rem 0.65rem;
+            border: 1.5px solid var(--ink);
+            color: var(--ink);
+            background: transparent;
+            cursor: default;
+            transition: background 0.15s, color 0.15s;
+          }
         .article-card p {
             margin-top: 0.5rem;
             line-height: 1.6;
@@ -337,46 +346,54 @@
             <div class="current-list">
                 <div class="current-item">
                     <h4>DirectX Engine</h4>
-                    <p>Project used to learn DirectX 12, will be used to do atmospheric scattering, volumetric clouds, and even path tracing.</p>
+                    <p>Project used to learn DirectX 12, will be used to do atmospheric scattering, volumetric clouds.</p>
                     <a href="https://github.com/saswatjk/directx-practice" target="_blank">→ View on GitHub</a>
                 </div>
                  <div class="current-item">
-                    <h4>8085 assembly REPL environment</h4>
-                    <p>Trying to learn scheme LISP through making a simple REPL for assembly, hopefully will be used by my emulator and assembler.</p>
-                    <a href="https://github.com/SaswatJK/REPL-in-Scheme" target="_blank">→ View on GitHub</a>
+                    <h4>PBRt</h4>
+                    <p>A pathtracer in C. It's CPU based right now. Will use HIP-RT later.</p>
+                    <a href="https://gitlab.com/saswatjungkhadka/pbrt" target="_blank">→ View on Gitlab</a>
                 </div>
                 <div class="current-item">
-                    <h4>Gaussian Splatting from scratch</h4>
-                        <p>Using pytorch to implement the Gaussian Splatting paper. Right now I'm implementing the NeRF paper before moving to Gaussian splatting.</p>
-                    <a href="https://github.com/saswatjk/Gaussian-Splatting" target="_blank">→ View on GitHub</a>
+                    <h4>Music Torrent</h4>
+                        <p>A torrent client built in GO that also acts as a music player.</p>
+                    <a href="https://github.com/saswatjk/MusicTorrent" target="_blank">→ View on GitHub</a>
                 </div>
-
             </div>
         </section>
 
         <section id="projects">
-            <h2>Projects on hold</h2>
+            <h2>Onfocused Projects</h2>
             <div class="current-list">
                 <div class="current-item">
-                    <h4>CPU Ray tracer</h4>
-                    <p>CPU ray tracer in golang built form scratch. Only simple refraction and spheres and plane right now. Will apply BSDF.</p>
-                    <a href="https://github.com/saswatjk/gotracer" target="_blank">→ View on GitHub</a>
+                    <h4>DOS-Demos</h4>
+                    <p>Collection of 8086 demos for dos emulators.</p>
+                    <a href="https://github.com/saswatjk/DOSDemofun" target="_blank">→ View on GitHub</a>
                 </div>
                 <div class="current-item">
-                    <h4>8085 assembler and emulator</h4>
-                    <p>Extremely simple 8085 assembler with a program counter that can execute instructions. Assembler and decoder will be built.</p>
-                    <a href="https://github.com/saswatjk/8085Emu" target="_blank">→ View on GitHub</a>
-                </div>
-                <div class="current-item">
-                    <h4>Crossword Builder</h4>
-                        <p>Crossword builder made in haskell. My first purely functional project. Doing this to learn haskell.</p>
-                    <a href="https://github.com/saswatjk/CrosswordBuilder" target="_blank">→ View on GitHub</a>
+                    <h4>Compiler</h4>
+                    <p>Compiler built from scratch in C. Uses compiler theory learnt in school.</p>
+                    <a href="https://github.com/saswatjk/MinimalCompiler" target="_blank">→ View on GitHub</a>
                 </div>
             </div>
         </section>
         <section id="articles">
             <h2>Articles</h2>
             <div class="articles">
+                <div class="article-card">
+                    <a href="articles/brdf.html">
+                        <div class="article-meta">April 2026</div>
+                        <h3>BRDFs from scratch.</h3>
+                        <div class="article-tags">
+                            <span class="tag">Computer Science</span>
+                            <span class="tag">Graphics Programming</span>
+                            <span class="tag">Calculus</span>
+                            <span class="tag">Geometry</span>
+                            <span class="tag">Rendering</span>
+                        </div>
+                        <p>I derive the famous Specular and Diffuse BRDFs from scratch, from first principles.</p>
+                    </a>
+                </div>
                 <div class="article-card">
                     <a href="articles/rfi.html">
                         <div class="article-meta">December 2025</div>
