@@ -468,6 +468,9 @@ This derivation is not novel, I read through 5 very important papers shuffling a
       <span class="sym-key">$D(\omega_m)$</span><span class="sym-val">Normal Distribution Function (NDF)</span>
       <span class="sym-key">$G_1$</span>       <span class="sym-val">Masking-shadowing function</span>
       <span class="sym-key">$F$</span>          <span class="sym-val">Fresnel factor</span>
+      <span class="sym-key">$\langle \omega_i \cdot \omega_m \rangle$</span>    <span class="sym-val">Clamped dot product.</span>
+
+
     </div>
   </div>
 </section>
@@ -482,7 +485,7 @@ When a light hits any "thing", it will either be transmitted (refracted), reflec
 Bi-directional Reflectance Distribution Function (BRDF) is a scary name, but it is quite simple. It gets a bad reputation because when people try to learn it, they get met with very scary looking equations (some of which we will derive in this article).
 </p>
 <p>
-The BRDF is simply the ratio of outgoing radiance in a given direction to the differential irradiance from a specific incoming direction. Radiance is the power of light in a point in a single direction. Irradiance is the power of light in a point from all directions. That is why we use differential irradiance. If we take an integral of the differential irradiance, we get the whole irradiance.
+The BRDF is simply the ratio of outgoing radiance in a given direction to the differential irradiance from a specific incoming direction. Radiance is the power of light in a point in a single direction. Irradiance is the power of light in a point from all directions. That is why we use differential irradiance. If we take an integral of the differential irradiance, we get the whole irradiance. I came across this  <a href="https://casual-effects.blogspot.com/2013/09/the-graphics-codex-web-edition.html" target="_blank" rel="noopener noreferrer"> cheatsheet</a> in the graphics programming discord for important terms in rendering such as radiance, irradiance and what not.
 </p>
 <p>
 So, BRDF $= L_o / E_i$ then? Yes! But, we don't actually know the $E_i$ in rendering. We will have to figure out the Irradiance by taking the incoming light from each angle around the point and integrating it. Taking the irradiance of each angle is not practical at all, there's infinite angles as there are infinite numbers. So we use something called a differential solid angle, which is an infinitesmally small surface 'patch' in a sphere. As that patch is extremely small, the irradiance along the surface at any point will be virtually the same, so we can measure the irradiance at one point in the surface and then project that patch to the point.
@@ -907,7 +910,9 @@ $$\text{BRDF} \cdot \frac{1}{2} \cdot 2\pi = 1$$
     </p>
     <p>
     This article should serve as a stepping stone to the original papers. Each term in <a href="#eq-xxii" class="eq-ref">(xxii)</a> (The Fresnel factor $F$, the masking-shadowing function $G_1$, and the NDF $D$) has its own rich derivation depending on the model chosen.
-    Diving into those headfirst is bound to hurt your head, so I recommend everyone to look through the references that I have listed for a more in-depth understanding of the topic. This article should help with a smoother reading of those papers.</p>
+    I recommend everyone to look through the references that I have listed for a more in-depth understanding of the topic. This article should help with a smoother reading of those papers.
+    The Wynn paper is the best place to start if you're new to the topic. The Heitz paper is where most of the derivations in this article come from — it's very dense but extremely thorough. The Walter et al. (GGX) paper is worth reading after this article if you want to understand the specific D and G1 functions that engines actually use. Cook-Torrance is the historical foundation. Blinn is old but has good diagrams for building intuition.
+    </p>
 </section>
 
 <section id="references">
